@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Liedanzeige</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    color: white;
+    font-family: "Segoe UI", Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  #display {
+    width: 100%;
+    text-align: center;
+    transition: opacity 0.3s ease;
+  }
+
+  #song {
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  #verses {
+    margin-top: 2vh;
+    white-space: nowrap;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="display">
+  <div id="song"></div>
+  <div id="verses"></div>
+</div>
+
+<script>
+// Passt Text nur dann an, wenn er wirklich zu breit ist
+function fitTextToWidth(element, maxSizeVW, minSizeVW) {
+  let size = maxSizeVW;
+  element.style.fontSize = size + "vw";
+
+  while (element.scrollWidth > window.innerWidth * 0.95 && size > minSizeVW) {
+    size -= 1;
+    element.style.fontSize = size + "vw";
+  }
+}
+
+// Zentriert den gesamten Block vertikal
+function centerVertically() {
+  const disp = document.getElementById("display");
+  const totalHeight = disp.offsetHeight;
+  const freeSpace = window.innerHeight - totalHeight;
+  disp.style.marginTop = Math.max(freeSpace / 2, 0) + "px";
+}
+
+setInterval(() => {
+  const visible = localStorage.getItem("displayVisible");
+  const song = localStorage.getItem("songText");
+  const verses = localStorage.getItem("versesText");
+
+  const disp = document.getElementById("display");
+  const songEl = document.getElementById("song");
+  const versesEl = document.getElementById("verses");
+
+  // Sichtbarkeit
+  if (visible === "no") {
+    document.body.style.background = "white";
+    document.body.style.color = "white";
+    disp.style.opacity = "0";
+    disp.style.visibility = "hidden";
+  } else {
+    document.body.style.background = "black";
+    document.body.style.color = "white";
+    disp.style.opacity = "1";
+    disp.style.visibility = "visible";
+  }
+
+  // Text setzen
+  songEl.textContent = song || "";
+  versesEl.textContent = verses || "";
+
+  // Fall 1: Keine Strophen → Liednummer riesig
+  if (!verses || verses.trim() === "") {
+    versesEl.style.display = "none";
+    fitTextToWidth(songEl, 25, 10);
+
+  } else {
+    // Fall 2: Mit Strophen → beide groß
+    versesEl.style.display = "block";
+
+    songEl.style.fontSize = "18vw";
+    versesEl.style.fontSize = "12vw";
+
+    fitTextToWidth(songEl, 18, 10);
+    fitTextToWidth(versesEl, 12, 8);
+  }
+
+  centerVertically();
+
+}, 300);
+</script>
+
+</body>
+</html>
