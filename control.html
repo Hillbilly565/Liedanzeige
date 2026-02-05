@@ -9,47 +9,48 @@
     font-family: "Segoe UI", Arial, sans-serif;
     background: #f4f4f7;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     color: #333;
   }
 
   h2 {
     text-align: center;
-    margin-bottom: 20px;
+    margin: 20px 0;
+    font-size: 7vw; /* groß auf Handy */
   }
 
   .card {
     background: white;
     padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    max-width: 500px;
-    margin: auto;
+    border-radius: 0;
+    box-shadow: none;
+    width: 100%;
+    max-width: 100%;
   }
 
   label {
-    font-size: 1.1em;
-    margin-top: 15px;
+    font-size: 5vw; /* große Labels */
+    margin-top: 20px;
     display: block;
   }
 
   input {
     width: 100%;
-    padding: 12px;
-    font-size: 1.1em;
-    margin-top: 5px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+    padding: 20px;
+    font-size: 6vw; /* große Eingabefelder */
+    margin-top: 10px;
+    border-radius: 12px;
+    border: 2px solid #ccc;
     box-sizing: border-box;
   }
 
   .btn {
     width: 100%;
-    padding: 14px;
-    font-size: 1.2em;
+    padding: 22px;
+    font-size: 6vw; /* große Buttons */
     border: none;
-    border-radius: 8px;
-    margin-top: 20px;
+    border-radius: 12px;
+    margin-top: 25px;
     cursor: pointer;
   }
 
@@ -58,17 +59,9 @@
     color: white;
   }
 
-  .btn-primary:hover {
-    background: #1f4fb0;
-  }
-
   .btn-danger {
     background: #d9534f;
     color: white;
-  }
-
-  .btn-danger:hover {
-    background: #b52f2b;
   }
 
   .btn-save {
@@ -76,39 +69,29 @@
     color: white;
   }
 
-  .btn-save:hover {
-    background: #449d44;
-  }
-
   .saved-list {
-    margin-top: 25px;
+    margin-top: 30px;
   }
 
   .saved-item {
-    padding: 10px;
+    padding: 18px;
     background: #eef1f5;
-    border-radius: 8px;
-    margin-bottom: 8px;
+    border-radius: 12px;
+    margin-bottom: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-
-  .saved-item span {
-    cursor: pointer;
+    font-size: 5vw; /* große gespeicherte Einträge */
   }
 
   .delete-btn {
     background: #d9534f;
     color: white;
     border: none;
-    padding: 6px 10px;
-    border-radius: 6px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 4.5vw;
     cursor: pointer;
-  }
-
-  .delete-btn:hover {
-    background: #b52f2b;
   }
 </style>
 </head>
@@ -221,4 +204,5 @@ loadSavedList();
 </script>
 
 </body>
+
 </html>
