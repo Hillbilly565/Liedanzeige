@@ -1,110 +1,58 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Liedanzeige</title>
+<title>Anzeige</title>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  // 🔥 HIER DEINE FIREBASE CONFIG EINSETZEN
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
+    authDomain: "liedanzeige-3b1dc.firebaseapp.com",
+    databaseURL: "https://liedanzeige-3b1dc-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "liedanzeige-3b1dc",
+    storageBucket: "liedanzeige-3b1dc.firebasestorage.app",
+    messagingSenderId: "615806685064",
+    appId: "1:615806685064:web:7c4e2d7403fe4a813d743d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  onValue(ref(db, "anzeige"), (snapshot) => {
+    const data = snapshot.val() || {};
+    document.getElementById("song").innerText = data.song || "";
+    document.getElementById("text").innerText = data.text || "";
+  });
+</script>
 
 <style>
   body {
-    margin: 0;
-    padding: 0;
     background: black;
     color: white;
-    font-family: "Segoe UI", Arial, sans-serif;
-    overflow: hidden;
-  }
-
-  #display {
-    width: 100%;
+    font-family: sans-serif;
     text-align: center;
-    transition: opacity 0.3s ease;
+    padding: 40px;
   }
-
   #song {
-    font-weight: bold;
-    white-space: nowrap;
+    font-size: 6vw;
+    margin-bottom: 40px;
   }
-
-  #verses {
-    margin-top: 2vh;
-    white-space: nowrap;
+  #text {
+    font-size: 4.5vw;
+    white-space: pre-wrap;
   }
 </style>
-</head>
 
+</head>
 <body>
 
-<div id="display">
-  <div id="song"></div>
-  <div id="verses"></div>
-</div>
-
-<script>
-// Passt Text nur dann an, wenn er wirklich zu breit ist
-function fitTextToWidth(element, maxSizeVW, minSizeVW) {
-  let size = maxSizeVW;
-  element.style.fontSize = size + "vw";
-
-  while (element.scrollWidth > window.innerWidth * 0.95 && size > minSizeVW) {
-    size -= 1;
-    element.style.fontSize = size + "vw";
-  }
-}
-
-// Zentriert den gesamten Block vertikal
-function centerVertically() {
-  const disp = document.getElementById("display");
-  const totalHeight = disp.offsetHeight;
-  const freeSpace = window.innerHeight - totalHeight;
-  disp.style.marginTop = Math.max(freeSpace / 2, 0) + "px";
-}
-
-setInterval(() => {
-  const visible = localStorage.getItem("displayVisible");
-  const song = localStorage.getItem("songText");
-  const verses = localStorage.getItem("versesText");
-
-  const disp = document.getElementById("display");
-  const songEl = document.getElementById("song");
-  const versesEl = document.getElementById("verses");
-
-  // Sichtbarkeit
-  if (visible === "no") {
-    document.body.style.background = "white";
-    document.body.style.color = "white";
-    disp.style.opacity = "0";
-    disp.style.visibility = "hidden";
-  } else {
-    document.body.style.background = "black";
-    document.body.style.color = "white";
-    disp.style.opacity = "1";
-    disp.style.visibility = "visible";
-  }
-
-  // Text setzen
-  songEl.textContent = song || "";
-  versesEl.textContent = verses || "";
-
-  // Fall 1: Keine Strophen → Liednummer riesig
-  if (!verses || verses.trim() === "") {
-    versesEl.style.display = "none";
-    fitTextToWidth(songEl, 25, 10);
-
-  } else {
-    // Fall 2: Mit Strophen → beide groß
-    versesEl.style.display = "block";
-
-    songEl.style.fontSize = "18vw";
-    versesEl.style.fontSize = "12vw";
-
-    fitTextToWidth(songEl, 18, 10);
-    fitTextToWidth(versesEl, 12, 8);
-  }
-
-  centerVertically();
-
-}, 300);
-</script>
+<div id="song"></div>
+<div id="text"></div>
 
 </body>
 </html>

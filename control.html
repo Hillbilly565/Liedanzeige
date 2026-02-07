@@ -1,207 +1,57 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Liedanzeige – Steuerung</title>
+<title>Steuerung</title>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  // 🔥 HIER DEINE FIREBASE CONFIG EINSETZEN
+  const firebaseConfig = {
+    apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
+    authDomain: "liedanzeige-3b1dc.firebaseapp.com",
+    databaseURL: "https://liedanzeige-3b1dc-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "liedanzeige-3b1dc",
+    storageBucket: "liedanzeige-3b1dc.firebasestorage.app",
+    messagingSenderId: "615806685064",
+    appId: "1:615806685064:web:7c4e2d7403fe4a813d743d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  window.senden = function () {
+    const song = document.getElementById("song").value;
+    const text = document.getElementById("text").value;
+
+    set(ref(db, "anzeige"), {
+      song: song,
+      text: text
+    });
+  };
+</script>
 
 <style>
-  body {
-    font-family: "Segoe UI", Arial, sans-serif;
-    background: #f4f4f7;
-    margin: 0;
-    padding: 0;
-    color: #333;
-  }
-
-  h2 {
-    text-align: center;
-    margin: 20px 0;
-    font-size: 7vw; /* groß auf Handy */
-  }
-
-  .card {
-    background: white;
-    padding: 20px;
-    border-radius: 0;
-    box-shadow: none;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  label {
-    font-size: 5vw; /* große Labels */
-    margin-top: 20px;
-    display: block;
-  }
-
-  input {
-    width: 100%;
-    padding: 20px;
-    font-size: 6vw; /* große Eingabefelder */
-    margin-top: 10px;
-    border-radius: 12px;
-    border: 2px solid #ccc;
-    box-sizing: border-box;
-  }
-
-  .btn {
-    width: 100%;
-    padding: 22px;
-    font-size: 6vw; /* große Buttons */
-    border: none;
-    border-radius: 12px;
-    margin-top: 25px;
-    cursor: pointer;
-  }
-
-  .btn-primary {
-    background: #2d6cdf;
-    color: white;
-  }
-
-  .btn-danger {
-    background: #d9534f;
-    color: white;
-  }
-
-  .btn-save {
-    background: #5cb85c;
-    color: white;
-  }
-
-  .saved-list {
-    margin-top: 30px;
-  }
-
-  .saved-item {
-    padding: 18px;
-    background: #eef1f5;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 5vw; /* große gespeicherte Einträge */
-  }
-
-  .delete-btn {
-    background: #d9534f;
-    color: white;
-    border: none;
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-size: 4.5vw;
-    cursor: pointer;
-  }
+  body { font-family: sans-serif; padding: 20px; }
+  input, textarea { width: 100%; font-size: 20px; padding: 10px; margin-top: 10px; }
+  button { width: 100%; padding: 15px; font-size: 22px; margin-top: 20px; }
 </style>
-</head>
 
+</head>
 <body>
 
-<h2>Liedanzeige – Steuerung</h2>
+<h2>Steuerung</h2>
 
-<div class="card">
+<label>Liednummer</label>
+<input id="song">
 
-  <label for="book">Buch</label>
-  <input list="booklist" id="book" placeholder="Buch auswählen oder eingeben">
-  <datalist id="booklist">
-    <option value="CB">
-    <option value="GB">
-    <option value="JLB">
-    <option value="CB II">
-  </datalist>
+<label>Text</label>
+<textarea id="text" rows="6"></textarea>
 
-  <label for="number">Liednummer</label>
-  <input id="number" type="text">
-
-  <label for="verses">Strophen</label>
-  <input id="verses" type="text">
-
-  <button class="btn btn-primary" onclick="showDisplay()">Anzeigen</button>
-  <button class="btn btn-danger" onclick="hideDisplay()">Ausblenden</button>
-  <button class="btn btn-save" onclick="saveEntry()">Speichern</button>
-
-  <div class="saved-list" id="savedList"></div>
-
-</div>
-
-<script>
-function showDisplay() {
-  const book = document.getElementById("book").value;
-  const number = document.getElementById("number").value;
-  const verses = document.getElementById("verses").value;
-
-  localStorage.setItem("songText", book + " " + number);
-
-  // Nur anzeigen, wenn etwas drinsteht
-  if (verses.trim() !== "") {
-    localStorage.setItem("versesText", "Str. " + verses);
-  } else {
-    localStorage.setItem("versesText", "");
-  }
-
-  localStorage.setItem("displayVisible", "yes");
-}
-
-function hideDisplay() {
-  localStorage.setItem("displayVisible", "no");
-}
-
-function saveEntry() {
-  const book = document.getElementById("book").value;
-  const number = document.getElementById("number").value;
-  const verses = document.getElementById("verses").value;
-
-  if (!book || !number) return;
-
-  const entry = { book, number, verses };
-
-  let saved = JSON.parse(localStorage.getItem("savedSongs") || "[]");
-  saved.push(entry);
-  localStorage.setItem("savedSongs", JSON.stringify(saved));
-
-  loadSavedList();
-}
-
-function deleteEntry(index) {
-  let saved = JSON.parse(localStorage.getItem("savedSongs") || "[]");
-  saved.splice(index, 1);
-  localStorage.setItem("savedSongs", JSON.stringify(saved));
-  loadSavedList();
-}
-
-function loadSavedList() {
-  const list = document.getElementById("savedList");
-  list.innerHTML = "";
-
-  let saved = JSON.parse(localStorage.getItem("savedSongs") || "[]");
-
-  saved.forEach((item, index) => {
-    const div = document.createElement("div");
-    div.className = "saved-item";
-
-    const text = document.createElement("span");
-    text.textContent = item.book + " " + item.number + (item.verses ? " – Str. " + item.verses : "");
-
-    text.onclick = () => {
-      document.getElementById("book").value = item.book;
-      document.getElementById("number").value = item.number;
-      document.getElementById("verses").value = item.verses;
-    };
-
-    const del = document.createElement("button");
-    del.className = "delete-btn";
-    del.textContent = "Löschen";
-    del.onclick = () => deleteEntry(index);
-
-    div.appendChild(text);
-    div.appendChild(del);
-    list.appendChild(div);
-  });
-}
-
-loadSavedList();
-</script>
+<button onclick="senden()">Senden</button>
 
 </body>
 </html>
