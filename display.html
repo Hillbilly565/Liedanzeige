@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <title>Anzeige</title>
 
-<!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // 🔥 HIER DEINE FIREBASE CONFIG EINSETZEN
+  // 🔥 DEINE FIREBASE CONFIG HIER EINSETZEN
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -34,16 +33,21 @@
   body {
     background: black;
     color: white;
-    font-family: sans-serif;
+    font-family: "Arial", sans-serif;
     text-align: center;
     padding: 40px;
+    margin: 0;
   }
+
   #song {
     font-size: 6vw;
+    font-weight: bold;
     margin-bottom: 40px;
   }
+
   #text {
     font-size: 4.5vw;
+    line-height: 1.3;
     white-space: pre-wrap;
   }
 </style>
