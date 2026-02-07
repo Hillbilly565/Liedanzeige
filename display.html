@@ -29,10 +29,22 @@
     margin-top: 2vh;
     white-space: nowrap;
   }
+
+  /* Unsichtbarer Vollbild-Button */
+  #fsButton {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
 </style>
 </head>
 
 <body>
+
+<button id="fsButton" onclick="goFullscreen()">FS</button>
 
 <div id="display">
   <div id="song"></div>
@@ -43,7 +55,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // 🔥 DEINE FIREBASE CONFIG HIER EINSETZEN
+  // 🔥 DEINE FIREBASE CONFIG HIER
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -60,6 +72,15 @@
   const disp = document.getElementById("display");
   const songEl = document.getElementById("song");
   const versesEl = document.getElementById("verses");
+  const fsButton = document.getElementById("fsButton");
+
+  // Vollbild-Funktion
+  window.goFullscreen = function () {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen();
+    if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    if (el.msRequestFullscreen) el.msRequestFullscreen();
+  };
 
   onValue(ref(db, "anzeige"), (snapshot) => {
     const data = snapshot.val() || {};
@@ -69,14 +90,12 @@
     const verses = data.verses || "";
     const fullscreen = data.fullscreen || "no";
 
-    // 🔥 Vollbildsteuerung
+    // 🔥 Vollbild aktivieren durch simulierten Button-Klick
     if (fullscreen === "yes") {
-      document.documentElement.requestFullscreen?.();
-    } else {
-      document.exitFullscreen?.();
+      fsButton.click();
     }
 
-    // 🔥 Sichtbarkeit: Text ausblenden, Hintergrund bleibt schwarz
+    // 🔥 Ausblenden = Text unsichtbar, Hintergrund bleibt schwarz
     if (visible === "no") {
       disp.style.opacity = "0";
       disp.style.visibility = "hidden";
@@ -107,7 +126,6 @@
     centerVertically();
   });
 
-  // Passt Text nur dann an, wenn er wirklich zu breit ist
   function fitTextToWidth(element, maxSizeVW, minSizeVW) {
     let size = maxSizeVW;
     element.style.fontSize = size + "vw";
@@ -118,7 +136,6 @@
     }
   }
 
-  // Zentriert den gesamten Block vertikal
   function centerVertically() {
     const totalHeight = disp.offsetHeight;
     const freeSpace = window.innerHeight - totalHeight;

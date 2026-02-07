@@ -22,10 +22,7 @@
   .card {
     background: white;
     padding: 20px;
-    border-radius: 0;
-    box-shadow: none;
     width: 100%;
-    max-width: 100%;
   }
 
   label {
@@ -41,7 +38,6 @@
     margin-top: 10px;
     border-radius: 12px;
     border: 2px solid #ccc;
-    box-sizing: border-box;
   }
 
   .btn {
@@ -56,20 +52,17 @@
 
   .btn-primary { background: #2d6cdf; color: white; }
   .btn-danger  { background: #d9534f; color: white; }
-  .btn-save    { background: #5cb85c; color: white; }
   .btn-dark    { background: #333; color: white; }
-
-  .saved-list { margin-top: 30px; }
+  .btn-save    { background: #5cb85c; color: white; }
 
   .saved-item {
     padding: 18px;
     background: #eef1f5;
     border-radius: 12px;
     margin-bottom: 12px;
+    font-size: 5vw;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    font-size: 5vw;
   }
 
   .delete-btn {
@@ -79,7 +72,6 @@
     padding: 12px 18px;
     border-radius: 10px;
     font-size: 4.5vw;
-    cursor: pointer;
   }
 </style>
 </head>
@@ -90,8 +82,8 @@
 
 <div class="card">
 
-  <label for="book">Buch</label>
-  <input list="booklist" id="book" placeholder="Buch auswählen oder eingeben">
+  <label>Buch</label>
+  <input list="booklist" id="book">
   <datalist id="booklist">
     <option value="CB">
     <option value="GB">
@@ -99,11 +91,11 @@
     <option value="CB II">
   </datalist>
 
-  <label for="number">Liednummer</label>
-  <input id="number" type="text">
+  <label>Liednummer</label>
+  <input id="number">
 
-  <label for="verses">Strophen</label>
-  <input id="verses" type="text">
+  <label>Strophen</label>
+  <input id="verses">
 
   <button class="btn btn-primary" onclick="showDisplay()">Anzeigen</button>
   <button class="btn btn-danger" onclick="hideDisplay()">Ausblenden</button>
@@ -113,7 +105,7 @@
 
   <button class="btn btn-save" onclick="saveEntry()">Speichern</button>
 
-  <div class="saved-list" id="savedList"></div>
+  <div id="savedList"></div>
 
 </div>
 
@@ -121,7 +113,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // 🔥 DEINE FIREBASE CONFIG HIER EINSETZEN
+  // 🔥 DEINE FIREBASE CONFIG HIER
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -135,13 +127,12 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // --- ANZEIGE EINBLENDEN ---
   window.showDisplay = function () {
-    const book   = document.getElementById("book").value;
+    const book = document.getElementById("book").value;
     const number = document.getElementById("number").value;
     const verses = document.getElementById("verses").value;
 
-    const songText   = (book + " " + number).trim();
+    const songText = (book + " " + number).trim();
     const versesText = verses.trim() !== "" ? "Str. " + verses : "";
 
     set(ref(db, "anzeige"), {
@@ -152,31 +143,27 @@
     });
   };
 
-  // --- ANZEIGE AUSBLENDEN ---
   window.hideDisplay = function () {
     update(ref(db, "anzeige"), { visible: "no" });
   };
 
-  // --- VOLLbild EIN ---
   window.fullscreenOn = function () {
     update(ref(db, "anzeige"), { fullscreen: "yes" });
   };
 
-  // --- VOLLbild AUS ---
   window.fullscreenOff = function () {
     update(ref(db, "anzeige"), { fullscreen: "no" });
   };
 
-  // --- FAVORITEN ---
+  // Favoriten bleiben lokal
   window.saveEntry = function () {
-    const book   = document.getElementById("book").value;
+    const book = document.getElementById("book").value;
     const number = document.getElementById("number").value;
     const verses = document.getElementById("verses").value;
 
     if (!book || !number) return;
 
     const entry = { book, number, verses };
-
     let saved = JSON.parse(localStorage.getItem("savedSongs") || "[]");
     saved.push(entry);
     localStorage.setItem("savedSongs", JSON.stringify(saved));
@@ -206,7 +193,7 @@
         item.book + " " + item.number + (item.verses ? " – Str. " + item.verses : "");
 
       text.onclick = () => {
-        document.getElementById("book").value   = item.book;
+        document.getElementById("book").value = item.book;
         document.getElementById("number").value = item.number;
         document.getElementById("verses").value = item.verses;
       };
