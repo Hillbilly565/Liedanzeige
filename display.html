@@ -43,7 +43,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // 🔥 DEINE CONFIG HIER
+  // 🔥 DEINE FIREBASE CONFIG HIER EINSETZEN
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -67,16 +67,20 @@
     const visible = data.visible || "yes";
     const song = data.song || "";
     const verses = data.verses || "";
+    const fullscreen = data.fullscreen || "no";
 
-    // Sichtbarkeit
+    // 🔥 Vollbildsteuerung
+    if (fullscreen === "yes") {
+      document.documentElement.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+
+    // 🔥 Sichtbarkeit: Text ausblenden, Hintergrund bleibt schwarz
     if (visible === "no") {
-      document.body.style.background = "white";
-      document.body.style.color = "white";
       disp.style.opacity = "0";
       disp.style.visibility = "hidden";
     } else {
-      document.body.style.background = "black";
-      document.body.style.color = "white";
       disp.style.opacity = "1";
       disp.style.visibility = "visible";
     }
