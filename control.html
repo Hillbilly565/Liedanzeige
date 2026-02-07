@@ -115,7 +115,7 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   // 🔥 HIER DEINE FIREBASE CONFIG EINSETZEN
   const firebaseConfig = {
@@ -149,7 +149,7 @@
   };
 
   window.hideDisplay = function () {
-    set(ref(db, "anzeige/visible"), "no");
+    update(ref(db, "anzeige"), { visible: "no" });
   };
 
   window.saveEntry = function () {
