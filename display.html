@@ -1,14 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Anzeige</title>
+<title>Liedanzeige</title>
 
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    color: white;
+    font-family: "Segoe UI", Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  #display {
+    width: 100%;
+    text-align: center;
+    transition: opacity 0.3s ease;
+  }
+
+  #song {
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  #verses {
+    margin-top: 2vh;
+    white-space: nowrap;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="display">
+  <div id="song"></div>
+  <div id="verses"></div>
+</div>
+
+<!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // 🔥 DEINE FIREBASE CONFIG HIER EINSETZEN
+  // 🔥 HIER DEINE FIREBASE CONFIG EINSETZEN
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -22,41 +58,76 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
+  // Firebase → Anzeige aktualisieren
   onValue(ref(db, "anzeige"), (snapshot) => {
     const data = snapshot.val() || {};
-    document.getElementById("song").innerText = data.song || "";
-    document.getElementById("text").innerText = data.text || "";
+
+    const visible = data.visible || "yes";
+    const song = data.song || "";
+    const verses = data.verses || "";
+
+    const disp = document.getElementById("display");
+    const songEl = document.getElementById("song");
+    const versesEl = document.getElementById("verses");
+
+    // Sichtbarkeit
+    if (visible === "no") {
+      document.body.style.background = "white";
+      document.body.style.color = "white";
+      disp.style.opacity = "0";
+      disp.style.visibility = "hidden";
+    } else {
+      document.body.style.background = "black";
+      document.body.style.color = "white";
+      disp.style.opacity = "1";
+      disp.style.visibility = "visible";
+    }
+
+    // Text setzen
+    songEl.textContent = song;
+    versesEl.textContent = verses;
+
+    // Fall 1: Keine Strophen → Liednummer riesig
+    if (!verses || verses.trim() === "") {
+      versesEl.style.display = "none";
+      fitTextToWidth(songEl, 25, 10);
+
+    } else {
+      // Fall 2: Mit Strophen → beide groß
+      versesEl.style.display = "block";
+
+      songEl.style.fontSize = "18vw";
+      versesEl.style.fontSize = "12vw";
+
+      fitTextToWidth(songEl, 18, 10);
+      fitTextToWidth(versesEl, 12, 8);
+    }
+
+    centerVertically();
   });
+
 </script>
 
-<style>
-  body {
-    background: black;
-    color: white;
-    font-family: "Arial", sans-serif;
-    text-align: center;
-    padding: 40px;
-    margin: 0;
+<script>
+// Passt Text nur dann an, wenn er wirklich zu breit ist
+function fitTextToWidth(element, maxSizeVW, minSizeVW) {
+  let size = maxSizeVW;
+  element.style.fontSize = size + "vw";
+
+  while (element.scrollWidth > window.innerWidth * 0.95 && size > minSizeVW) {
+    size -= 1;
+    element.style.fontSize = size + "vw";
   }
+}
 
-  #song {
-    font-size: 6vw;
-    font-weight: bold;
-    margin-bottom: 40px;
-  }
-
-  #text {
-    font-size: 4.5vw;
-    line-height: 1.3;
-    white-space: pre-wrap;
-  }
-</style>
-
-</head>
-<body>
-
-<div id="song"></div>
-<div id="text"></div>
+// Zentriert den gesamten Block vertikal
+function centerVertically() {
+  const disp = document.getElementById("display");
+  const totalHeight = disp.offsetHeight;
+  const freeSpace = window.innerHeight - totalHeight;
+  disp.style.marginTop = Math.max(freeSpace / 2, 0) + "px";
+}
+</script>
 
 </body>
 </html>
