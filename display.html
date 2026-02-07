@@ -39,12 +39,11 @@
   <div id="verses"></div>
 </div>
 
-<!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // 🔥 HIER DEINE FIREBASE CONFIG EINSETZEN
+  // 🔥 DEINE CONFIG HIER
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -58,17 +57,16 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // Firebase → Anzeige aktualisieren
+  const disp = document.getElementById("display");
+  const songEl = document.getElementById("song");
+  const versesEl = document.getElementById("verses");
+
   onValue(ref(db, "anzeige"), (snapshot) => {
     const data = snapshot.val() || {};
 
     const visible = data.visible || "yes";
     const song = data.song || "";
     const verses = data.verses || "";
-
-    const disp = document.getElementById("display");
-    const songEl = document.getElementById("song");
-    const versesEl = document.getElementById("verses");
 
     // Sichtbarkeit
     if (visible === "no") {
@@ -91,7 +89,6 @@
     if (!verses || verses.trim() === "") {
       versesEl.style.display = "none";
       fitTextToWidth(songEl, 25, 10);
-
     } else {
       // Fall 2: Mit Strophen → beide groß
       versesEl.style.display = "block";
@@ -106,27 +103,25 @@
     centerVertically();
   });
 
-</script>
-
-<script>
-// Passt Text nur dann an, wenn er wirklich zu breit ist
-function fitTextToWidth(element, maxSizeVW, minSizeVW) {
-  let size = maxSizeVW;
-  element.style.fontSize = size + "vw";
-
-  while (element.scrollWidth > window.innerWidth * 0.95 && size > minSizeVW) {
-    size -= 1;
+  // Passt Text nur dann an, wenn er wirklich zu breit ist
+  function fitTextToWidth(element, maxSizeVW, minSizeVW) {
+    let size = maxSizeVW;
     element.style.fontSize = size + "vw";
-  }
-}
 
-// Zentriert den gesamten Block vertikal
-function centerVertically() {
-  const disp = document.getElementById("display");
-  const totalHeight = disp.offsetHeight;
-  const freeSpace = window.innerHeight - totalHeight;
-  disp.style.marginTop = Math.max(freeSpace / 2, 0) + "px";
-}
+    while (element.scrollWidth > window.innerWidth * 0.95 && size > minSizeVW) {
+      size -= 1;
+      element.style.fontSize = size + "vw";
+    }
+  }
+
+  // Zentriert den gesamten Block vertikal
+  function centerVertically() {
+    const totalHeight = disp.offsetHeight;
+    const freeSpace = window.innerHeight - totalHeight;
+    disp.style.marginTop = Math.max(freeSpace / 2, 0) + "px";
+  }
+
+  window.addEventListener("resize", centerVertically);
 </script>
 
 </body>

@@ -55,8 +55,8 @@
   }
 
   .btn-primary { background: #2d6cdf; color: white; }
-  .btn-danger { background: #d9534f; color: white; }
-  .btn-save { background: #5cb85c; color: white; }
+  .btn-danger  { background: #d9534f; color: white; }
+  .btn-save    { background: #5cb85c; color: white; }
 
   .saved-list { margin-top: 30px; }
 
@@ -112,38 +112,35 @@
 
 </div>
 
-<!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // 🔥 HIER DEINE FIREBASE CONFIG EINSETZEN
+  // 🔥 DEINE CONFIG HIER
   const firebaseConfig = {
-    apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
-    authDomain: "liedanzeige-3b1dc.firebaseapp.com",
-    databaseURL: "https://liedanzeige-3b1dc-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "liedanzeige-3b1dc",
-    storageBucket: "liedanzeige-3b1dc.firebasestorage.app",
-    messagingSenderId: "615806685064",
-    appId: "1:615806685064:web:7c4e2d7403fe4a813d743d"
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // --- FUNKTIONEN ---
-
   window.showDisplay = function () {
-    const book = document.getElementById("book").value;
+    const book   = document.getElementById("book").value;
     const number = document.getElementById("number").value;
     const verses = document.getElementById("verses").value;
 
-    const songText = (book + " " + number).trim();
+    const songText   = (book + " " + number).trim();
     const versesText = verses.trim() !== "" ? "Str. " + verses : "";
 
     set(ref(db, "anzeige"), {
-      song: songText,
-      verses: versesText,
+      song:    songText,
+      verses:  versesText,
       visible: "yes"
     });
   };
@@ -152,8 +149,9 @@
     update(ref(db, "anzeige"), { visible: "no" });
   };
 
+  // Lokale Speicherung der Favoriten bleibt wie gehabt
   window.saveEntry = function () {
-    const book = document.getElementById("book").value;
+    const book   = document.getElementById("book").value;
     const number = document.getElementById("number").value;
     const verses = document.getElementById("verses").value;
 
@@ -190,7 +188,7 @@
         item.book + " " + item.number + (item.verses ? " – Str. " + item.verses : "");
 
       text.onclick = () => {
-        document.getElementById("book").value = item.book;
+        document.getElementById("book").value   = item.book;
         document.getElementById("number").value = item.number;
         document.getElementById("verses").value = item.verses;
       };
