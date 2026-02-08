@@ -41,7 +41,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   // 🔥 DEINE FIREBASE CONFIG HIER
   const firebaseConfig = {
@@ -52,7 +52,6 @@
     storageBucket: "liedanzeige-3b1dc.firebasestorage.app",
     messagingSenderId: "615806685064",
     appId: "1:615806685064:web:7c4e2d7403fe4a813d743d"
-  };
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
@@ -61,27 +60,32 @@
   const songEl = document.getElementById("song");
   const versesEl = document.getElementById("verses");
 
-  // 🔥 Lokale Anzeige beim Start komplett leeren & ausblenden
+  // Beim Start: immer ausgeblendet und leer
   disp.style.opacity = "0";
   disp.style.visibility = "hidden";
   songEl.textContent = "";
   versesEl.textContent = "";
 
-  // 🔥 Datenbank beim Start zurücksetzen
-  set(ref(db, "anzeige"), {
-    song: "",
-    verses: "",
-    visible: "no"
-  });
+  let firstSnapshot = true;
 
   onValue(ref(db, "anzeige"), (snapshot) => {
     const data = snapshot.val() || {};
+
+    // 👉 Ersten Stand aus der DB komplett ignorieren
+    if (firstSnapshot) {
+      firstSnapshot = false;
+      // Sicherstellen, dass wirklich nichts angezeigt wird
+      disp.style.opacity = "0";
+      disp.style.visibility = "hidden";
+      songEl.textContent = "";
+      versesEl.textContent = "";
+      return;
+    }
 
     const visible = data.visible || "no";
     const song = data.song || "";
     const verses = data.verses || "";
 
-    // Sichtbarkeit
     if (visible === "no") {
       disp.style.opacity = "0";
       disp.style.visibility = "hidden";
@@ -90,21 +94,16 @@
       disp.style.visibility = "visible";
     }
 
-    // Text setzen
     songEl.textContent = song;
     versesEl.textContent = verses;
 
-    // Fall 1: Keine Strophen → Liednummer riesig
     if (!verses || verses.trim() === "") {
       versesEl.style.display = "none";
       fitTextToWidth(songEl, 25, 10);
     } else {
-      // Fall 2: Mit Strophen → beide groß
       versesEl.style.display = "block";
-
       songEl.style.fontSize = "18vw";
       versesEl.style.fontSize = "12vw";
-
       fitTextToWidth(songEl, 18, 10);
       fitTextToWidth(versesEl, 12, 8);
     }
