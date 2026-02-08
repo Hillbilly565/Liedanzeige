@@ -18,7 +18,7 @@
       margin-bottom: 16px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    input, button, textarea {
+    input, button {
       font-size: 16px;
       padding: 8px;
       width: 100%;
@@ -31,7 +31,6 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 8px;
     }
     button:disabled {
       background: #aaa;
@@ -67,7 +66,7 @@
 </div>
 
 <script>
-  // Firebase Config
+  // Deine Firebase-Konfiguration
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -82,7 +81,7 @@
 
   let token = null;
 
-  // Token-Erzeugung kompatibel mit Android/Beamer
+  // Token-Erzeugung kompatibel mit Fully / Android-TV
   function generateToken() {
     return Date.now() + "-" + Math.random().toString(36).substring(2);
   }
