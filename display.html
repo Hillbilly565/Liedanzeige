@@ -18,14 +18,18 @@
       text-align: center;
     }
 
+    /* 🔵 Pairing-Code groß in der Mitte */
     #pairingCenter {
-      font-size: 80px;
+      font-size: 90px;
       font-weight: bold;
+      line-height: 1.2;
     }
 
+    /* 🔵 Inhalt erst sichtbar, wenn verbunden */
     #content {
-      font-size: 48px;
+      font-size: 60px;
       display: none;
+      padding: 20px;
     }
   </style>
 
@@ -34,10 +38,13 @@
 </head>
 <body>
 
+<!-- 🔵 Pairing-Code groß in der Mitte -->
 <div id="pairingCenter">
-  Code: <span id="pairingCode">-----</span>
+  Code:<br>
+  <span id="pairingCode">-----</span>
 </div>
 
+<!-- 🔵 Inhalt nach erfolgreichem Pairing -->
 <div id="content">
   Warte auf Steuerung…
 </div>
@@ -94,7 +101,7 @@
 
     switch (data.action) {
       case "anzeigen":
-        contentEl.textContent = "Anzeigen…";
+        contentEl.textContent = data.song + " " + data.verses;
         break;
 
       case "ausblenden":
