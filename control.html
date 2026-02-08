@@ -1,115 +1,73 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Liedanzeige – Steuerung</title>
+  <meta charset="UTF-8">
+  <title>Steuerung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-  body {
-    font-family: "Segoe UI", Arial, sans-serif;
-    background: #f4f4f7;
-    margin: 0;
-    padding: 0;
-    color: #333;
-  }
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 16px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    input, button, textarea {
+      font-size: 16px;
+      padding: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 8px;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:disabled {
+      background: #aaa;
+    }
+  </style>
 
-  h2 {
-    text-align: center;
-    margin: 20px 0;
-    font-size: 7vw;
-  }
-
-  .card {
-    background: white;
-    padding: 20px;
-    width: 100%;
-  }
-
-  label {
-    font-size: 5vw;
-    margin-top: 20px;
-    display: block;
-  }
-
-  input {
-    width: 100%;
-    padding: 20px;
-    font-size: 6vw;
-    margin-top: 10px;
-    border-radius: 12px;
-    border: 2px solid #ccc;
-  }
-
-  .btn {
-    width: 100%;
-    padding: 22px;
-    font-size: 6vw;
-    border: none;
-    border-radius: 12px;
-    margin-top: 25px;
-    cursor: pointer;
-  }
-
-  .btn-primary { background: #2d6cdf; color: white; }
-  .btn-danger  { background: #d9534f; color: white; }
-  .btn-save    { background: #5cb85c; color: white; }
-
-  .saved-item {
-    padding: 18px;
-    background: #eef1f5;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    font-size: 5vw;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .delete-btn {
-    background: #d9534f;
-    color: white;
-    border: none;
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-size: 4.5vw;
-  }
-</style>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
-
 <body>
 
-<h2>Liedanzeige – Steuerung</h2>
+<h1>Steuerseite</h1>
 
 <div class="card">
+  <h2>Pairing</h2>
 
-  <label>Buch</label>
-  <input list="booklist" id="book">
-  <datalist id="booklist">
-    <option value="CB">
-    <option value="GB">
-    <option value="JLB">
-    <option value="CB II">
-  </datalist>
+  <label>Display-ID</label>
+  <input id="displayId" value="kirche-beamer-1">
 
-  <label>Liednummer</label>
-  <input id="number">
+  <label>Pairing-Code von der Anzeige</label>
+  <input id="pairingCode">
 
-  <label>Strophen</label>
-  <input id="verses">
+  <button onclick="pair()">Verbinden</button>
 
-  <button class="btn btn-primary" onclick="showDisplay()">Anzeigen</button>
-  <button class="btn btn-danger" onclick="hideDisplay()">Ausblenden</button>
-
-  <button class="btn btn-save" onclick="saveEntry()">Speichern</button>
-
-  <div id="savedList"></div>
-
+  <div id="status">Nicht verbunden</div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<div class="card">
+  <h2>Aktionen</h2>
+  <button onclick="sendAction('anzeigen')" id="btnAnzeigen" disabled>Anzeigen</button>
+  <button onclick="sendAction('ausblenden')" id="btnAusblenden" disabled>Ausblenden</button>
+  <button onclick="sendAction('speichern')" id="btnSpeichern" disabled>Speichern</button>
+</div>
 
-  // 🔥 DEINE FIREBASE CONFIG HIER
+<script>
+  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -119,84 +77,46 @@
     messagingSenderId: "615806685064",
     appId: "1:615806685064:web:7c4e2d7403fe4a813d743d"
   };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+  let token = null;
 
-  window.showDisplay = function () {
-    const book = document.getElementById("book").value;
-    const number = document.getElementById("number").value;
-    const verses = document.getElementById("verses").value;
+  // Token-Erzeugung kompatibel mit Android/Beamer
+  function generateToken() {
+    return Date.now() + "-" + Math.random().toString(36).substring(2);
+  }
 
-    const songText = (book + " " + number).trim();
-    const versesText = verses.trim() !== "" ? "Str. " + verses : "";
+  function pair() {
+    const displayId = document.getElementById("displayId").value.trim();
+    const enteredCode = document.getElementById("pairingCode").value.trim();
 
-    set(ref(db, "anzeige"), {
-      song: songText,
-      verses: versesText,
-      visible: "yes"
+    db.ref(`displays/${displayId}/pairingCode`).once("value").then(snap => {
+      if (snap.val() !== enteredCode) {
+        alert("Falscher Pairing-Code");
+        return;
+      }
+
+      token = generateToken();
+      db.ref(`displays/${displayId}/token`).set(token);
+
+      document.getElementById("status").textContent = "Verbunden";
+
+      document.getElementById("btnAnzeigen").disabled = false;
+      document.getElementById("btnAusblenden").disabled = false;
+      document.getElementById("btnSpeichern").disabled = false;
     });
-  };
+  }
 
-  window.hideDisplay = function () {
-    update(ref(db, "anzeige"), { visible: "no" });
-  };
+  function sendAction(action) {
+    const displayId = document.getElementById("displayId").value.trim();
 
-  // Favoriten bleiben lokal
-  window.saveEntry = function () {
-    const book = document.getElementById("book").value;
-    const number = document.getElementById("number").value;
-    const verses = document.getElementById("verses").value;
-
-    if (!book || !number) return;
-
-    const entry = { book, number, verses };
-    let saved = JSON.parse(localStorage.getItem("savedSongs") || "[]");
-    saved.push(entry);
-    localStorage.setItem("savedSongs", JSON.stringify(saved));
-
-    loadSavedList();
-  };
-
-  window.deleteEntry = function (index) {
-    let saved = JSON.parse(localStorage.getItem("savedSongs") || "[]");
-    saved.splice(index, 1);
-    localStorage.setItem("savedSongs", JSON.stringify(saved));
-    loadSavedList();
-  };
-
-  window.loadSavedList = function () {
-    const list = document.getElementById("savedList");
-    list.innerHTML = "";
-
-    let saved = JSON.parse(localStorage.getItem("savedSongs") || "[]");
-
-    saved.forEach((item, index) => {
-      const div = document.createElement("div");
-      div.className = "saved-item";
-
-      const text = document.createElement("span");
-      text.textContent =
-        item.book + " " + item.number + (item.verses ? " – Str. " + item.verses : "");
-
-      text.onclick = () => {
-        document.getElementById("book").value = item.book;
-        document.getElementById("number").value = item.number;
-        document.getElementById("verses").value = item.verses;
-      };
-
-      const del = document.createElement("button");
-      del.className = "delete-btn";
-      del.textContent = "Löschen";
-      del.onclick = () => deleteEntry(index);
-
-      div.appendChild(text);
-      div.appendChild(del);
-      list.appendChild(div);
+    db.ref(`displays/${displayId}/control`).set({
+      action: action,
+      token: token,
+      ts: Date.now()
     });
-  };
-
-  loadSavedList();
+  }
 </script>
 
 </body>

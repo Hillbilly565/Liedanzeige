@@ -1,49 +1,53 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Liedanzeige</title>
+  <meta charset="UTF-8">
+  <title>Anzeige</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: black;
-    color: white;
-    font-family: "Segoe UI", Arial, sans-serif;
-    overflow: hidden;
-  }
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #pairingBox {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 22px;
+    }
+    #content {
+      font-size: 48px;
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
 
-  #display {
-    width: 100%;
-    text-align: center;
-    transition: opacity 0.3s ease;
-  }
-
-  #song {
-    font-weight: bold;
-    white-space: nowrap;
-  }
-
-  #verses {
-    margin-top: 2vh;
-    white-space: nowrap;
-  }
-</style>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
-
 <body>
 
-<div id="display">
-  <div id="song"></div>
-  <div id="verses"></div>
+<div id="pairingBox">
+  Code: <span id="pairingCode">-----</span>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<div id="content">
+  Warte auf Steuerung…
+</div>
 
-  // 🔥 DEINE FIREBASE CONFIG HIER
+<script>
+  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -53,87 +57,59 @@
     messagingSenderId: "615806685064",
     appId: "1:615806685064:web:7c4e2d7403fe4a813d743d"
   };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+  const DISPLAY_ID = "kirche-beamer-1";
 
-  const disp = document.getElementById("display");
-  const songEl = document.getElementById("song");
-  const versesEl = document.getElementById("verses");
+  const pairingCodeEl = document.getElementById("pairingCode");
+  const contentEl = document.getElementById("content");
 
-  // 🔥 1. Beim Start: DOM komplett leeren & ausblenden
-  disp.style.opacity = "0";
-  disp.style.visibility = "hidden";
-  songEl.textContent = "";
-  versesEl.textContent = "";
+  let expectedToken = null;
 
-  // 🔥 2. Ersten Firebase-Snapshot ignorieren
-  let firstSnapshot = true;
+  // Pairing-Code erzeugen
+  function generatePairingCode() {
+    const code = Math.floor(10000 + Math.random() * 90000).toString();
+    pairingCodeEl.textContent = code;
 
-  onValue(ref(db, "anzeige"), (snapshot) => {
-    const data = snapshot.val() || {};
+    db.ref(`displays/${DISPLAY_ID}/pairingCode`).set(code);
+    db.ref(`displays/${DISPLAY_ID}/token`).set(null);
+    db.ref(`displays/${DISPLAY_ID}/control`).set(null);
+  }
 
-    if (firstSnapshot) {
-      firstSnapshot = false;
+  generatePairingCode();
 
-      // Sicherheit: alles leer halten
-      disp.style.opacity = "0";
-      disp.style.visibility = "hidden";
-      songEl.textContent = "";
-      versesEl.textContent = "";
-
-      return; // 👉 erster Snapshot wird komplett ignoriert
-    }
-
-    const visible = data.visible || "no";
-    const song = data.song || "";
-    const verses = data.verses || "";
-
-    // 🔥 Sichtbarkeit steuern
-    if (visible === "no") {
-      disp.style.opacity = "0";
-      disp.style.visibility = "hidden";
+  // Token beobachten
+  db.ref(`displays/${DISPLAY_ID}/token`).on("value", snap => {
+    expectedToken = snap.val();
+    if (expectedToken) {
+      contentEl.textContent = "Verbunden – warte auf Befehle…";
     } else {
-      disp.style.opacity = "1";
-      disp.style.visibility = "visible";
+      contentEl.textContent = "Warte auf Steuerung…";
     }
-
-    // Text setzen
-    songEl.textContent = song;
-    versesEl.textContent = verses;
-
-    // Schriftgrößenlogik
-    if (!verses || verses.trim() === "") {
-      versesEl.style.display = "none";
-      fitTextToWidth(songEl, 25, 10);
-    } else {
-      versesEl.style.display = "block";
-      songEl.style.fontSize = "18vw";
-      versesEl.style.fontSize = "12vw";
-      fitTextToWidth(songEl, 18, 10);
-      fitTextToWidth(versesEl, 12, 8);
-    }
-
-    centerVertically();
   });
 
-  function fitTextToWidth(element, maxSizeVW, minSizeVW) {
-    let size = maxSizeVW;
-    element.style.fontSize = size + "vw";
+  // Steuerbefehle beobachten
+  db.ref(`displays/${DISPLAY_ID}/control`).on("value", snap => {
+    const data = snap.val();
+    if (!data) return;
+    if (!expectedToken || data.token !== expectedToken) return;
 
-    while (element.scrollWidth > window.innerWidth * 0.95 && size > minSizeVW) {
-      size -= 1;
-      element.style.fontSize = size + "vw";
+    switch (data.action) {
+      case "showText":
+        contentEl.textContent = data.payload || "";
+        break;
+      case "next":
+        contentEl.textContent = "Nächster Song";
+        break;
+      case "prev":
+        contentEl.textContent = "Vorheriger Song";
+        break;
+      case "resetPairing":
+        generatePairingCode();
+        break;
     }
-  }
-
-  function centerVertically() {
-    const totalHeight = disp.offsetHeight;
-    const freeSpace = window.innerHeight - totalHeight;
-    disp.style.marginTop = Math.max(freeSpace / 2, 0) + "px";
-  }
-
-  window.addEventListener("resize", centerVertically);
+  });
 </script>
 
 </body>
