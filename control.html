@@ -118,6 +118,14 @@
 </div>
 
 <script type="module">
+	// 🔵 Pairing-Code aus LocalStorage wiederherstellen
+	window.addEventListener("load", () => {
+	  const saved = localStorage.getItem("lastPairingCode");
+	  if (saved) {
+		document.getElementById("pairingCode").value = saved;
+	  }
+	});
+	
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
@@ -144,6 +152,9 @@
     const displayId = document.getElementById("displayId").value.trim();
     const entered = document.getElementById("pairingCode").value.trim();
 
+	// 🔵 Pairing-Code speichern
+	localStorage.setItem("lastPairingCode", entered);
+	
     const pairingRef = ref(db, `displays/${displayId}/pairingCode`);
 
     import("https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js").then(({ get, child }) => {
