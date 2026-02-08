@@ -25,11 +25,23 @@
       line-height: 1.2;
     }
 
-    /* 🔵 Inhalt erst sichtbar, wenn verbunden */
+    /* 🔵 Liedanzeige */
     #content {
-      font-size: 60px;
       display: none;
       padding: 20px;
+    }
+
+    /* 🔵 Buch + Nummer groß */
+    #songLine {
+      font-size: 80px;
+      font-weight: bold;
+      margin-bottom: 40px;
+    }
+
+    /* 🔵 Strophen darunter */
+    #versesLine {
+      font-size: 60px;
+      margin-top: 20px;
     }
   </style>
 
@@ -44,9 +56,10 @@
   <span id="pairingCode">-----</span>
 </div>
 
-<!-- 🔵 Inhalt nach erfolgreichem Pairing -->
+<!-- 🔵 Liedanzeige -->
 <div id="content">
-  Warte auf Steuerung…
+  <div id="songLine"></div>
+  <div id="versesLine"></div>
 </div>
 
 <script>
@@ -68,6 +81,9 @@
   const pairingCenter = document.getElementById("pairingCenter");
   const contentEl = document.getElementById("content");
 
+  const songLine = document.getElementById("songLine");
+  const versesLine = document.getElementById("versesLine");
+
   let expectedToken = null;
 
   function generatePairingCode() {
@@ -87,7 +103,8 @@
     if (expectedToken) {
       pairingCenter.style.display = "none";
       contentEl.style.display = "block";
-      contentEl.textContent = "Verbunden – warte auf Befehle…";
+      songLine.textContent = "";
+      versesLine.textContent = "";
     } else {
       pairingCenter.style.display = "block";
       contentEl.style.display = "none";
@@ -101,15 +118,18 @@
 
     switch (data.action) {
       case "anzeigen":
-        contentEl.textContent = data.song + " " + data.verses;
+        songLine.textContent = data.song || "";
+        versesLine.textContent = data.verses || "";
         break;
 
       case "ausblenden":
-        contentEl.textContent = "";
+        songLine.textContent = "";
+        versesLine.textContent = "";
         break;
 
       case "speichern":
-        contentEl.textContent = "Gespeichert!";
+        songLine.textContent = "Gespeichert!";
+        versesLine.textContent = "";
         break;
 
       case "resetPairing":
