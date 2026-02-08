@@ -12,24 +12,20 @@
       color: #fff;
       font-family: system-ui, sans-serif;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      text-align: center;
     }
-    #pairingBox {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.7);
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 22px;
+
+    #pairingCenter {
+      font-size: 80px;
+      font-weight: bold;
     }
+
     #content {
       font-size: 48px;
-      text-align: center;
-      padding: 20px;
+      display: none;
     }
   </style>
 
@@ -38,7 +34,7 @@
 </head>
 <body>
 
-<div id="pairingBox">
+<div id="pairingCenter">
   Code: <span id="pairingCode">-----</span>
 </div>
 
@@ -47,7 +43,6 @@
 </div>
 
 <script>
-  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -63,11 +58,11 @@
   const DISPLAY_ID = "kirche-beamer-1";
 
   const pairingCodeEl = document.getElementById("pairingCode");
+  const pairingCenter = document.getElementById("pairingCenter");
   const contentEl = document.getElementById("content");
 
   let expectedToken = null;
 
-  // Pairing-Code erzeugen
   function generatePairingCode() {
     const code = Math.floor(10000 + Math.random() * 90000).toString();
     pairingCodeEl.textContent = code;
@@ -79,24 +74,25 @@
 
   generatePairingCode();
 
-  // Token beobachten
   db.ref(`displays/${DISPLAY_ID}/token`).on("value", snap => {
     expectedToken = snap.val();
+
     if (expectedToken) {
+      pairingCenter.style.display = "none";
+      contentEl.style.display = "block";
       contentEl.textContent = "Verbunden – warte auf Befehle…";
     } else {
-      contentEl.textContent = "Warte auf Steuerung…";
+      pairingCenter.style.display = "block";
+      contentEl.style.display = "none";
     }
   });
 
-  // Steuerbefehle beobachten
   db.ref(`displays/${DISPLAY_ID}/control`).on("value", snap => {
     const data = snap.val();
     if (!data) return;
     if (!expectedToken || data.token !== expectedToken) return;
 
     switch (data.action) {
-
       case "anzeigen":
         contentEl.textContent = "Anzeigen…";
         break;
