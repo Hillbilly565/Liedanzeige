@@ -52,6 +52,7 @@
     storageBucket: "liedanzeige-3b1dc.firebasestorage.app",
     messagingSenderId: "615806685064",
     appId: "1:615806685064:web:7c4e2d7403fe4a813d743d"
+  };
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
@@ -60,32 +61,35 @@
   const songEl = document.getElementById("song");
   const versesEl = document.getElementById("verses");
 
-  // Beim Start: immer ausgeblendet und leer
+  // 🔥 1. Beim Start: DOM komplett leeren & ausblenden
   disp.style.opacity = "0";
   disp.style.visibility = "hidden";
   songEl.textContent = "";
   versesEl.textContent = "";
 
+  // 🔥 2. Ersten Firebase-Snapshot ignorieren
   let firstSnapshot = true;
 
   onValue(ref(db, "anzeige"), (snapshot) => {
     const data = snapshot.val() || {};
 
-    // 👉 Ersten Stand aus der DB komplett ignorieren
     if (firstSnapshot) {
       firstSnapshot = false;
-      // Sicherstellen, dass wirklich nichts angezeigt wird
+
+      // Sicherheit: alles leer halten
       disp.style.opacity = "0";
       disp.style.visibility = "hidden";
       songEl.textContent = "";
       versesEl.textContent = "";
-      return;
+
+      return; // 👉 erster Snapshot wird komplett ignoriert
     }
 
     const visible = data.visible || "no";
     const song = data.song || "";
     const verses = data.verses || "";
 
+    // 🔥 Sichtbarkeit steuern
     if (visible === "no") {
       disp.style.opacity = "0";
       disp.style.visibility = "hidden";
@@ -94,9 +98,11 @@
       disp.style.visibility = "visible";
     }
 
+    // Text setzen
     songEl.textContent = song;
     versesEl.textContent = verses;
 
+    // Schriftgrößenlogik
     if (!verses || verses.trim() === "") {
       versesEl.style.display = "none";
       fitTextToWidth(songEl, 25, 10);
