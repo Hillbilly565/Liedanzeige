@@ -44,6 +44,7 @@
 
 <h1>Steuerseite</h1>
 
+<!-- PAIRING-BEREICH (minimal, oben eingefügt) -->
 <div class="card">
   <h2>Pairing</h2>
 
@@ -58,6 +59,7 @@
   <div id="status">Nicht verbunden</div>
 </div>
 
+<!-- DEINE ORIGINALEN BUTTONS -->
 <div class="card">
   <h2>Aktionen</h2>
   <button onclick="sendAction('anzeigen')" id="btnAnzeigen" disabled>Anzeigen</button>
@@ -101,6 +103,7 @@
 
       document.getElementById("status").textContent = "Verbunden";
 
+      // Buttons aktivieren
       document.getElementById("btnAnzeigen").disabled = false;
       document.getElementById("btnAusblenden").disabled = false;
       document.getElementById("btnSpeichern").disabled = false;
