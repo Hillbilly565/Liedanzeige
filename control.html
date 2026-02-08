@@ -26,7 +26,7 @@
   }
 
   label {
-    font-size: 5vw;
+    font-size: 6vw;
     margin-top: 20px;
     display: block;
   }
@@ -34,7 +34,7 @@
   input {
     width: 100%;
     padding: 20px;
-    font-size: 6vw;
+    font-size: 7vw;
     margin-top: 10px;
     border-radius: 12px;
     border: 2px solid #ccc;
@@ -81,18 +81,17 @@
 
 <div class="card">
 
-  <!-- 🔵 PAIRING-BEREICH -->
-  <label>Display-ID</label>
-  <input id="displayId" value="kirche-beamer-1">
+  <!-- 🔵 PAIRING-BEREICH (wird später ausgeblendet) -->
+  <div id="pairingArea">
+    <label>Pairing-Code</label>
+    <input id="pairingCode">
 
-  <label>Pairing-Code</label>
-  <input id="pairingCode">
+    <button class="btn btn-primary" onclick="pair()">Verbinden</button>
 
-  <button class="btn btn-primary" onclick="pair()">Verbinden</button>
+    <div id="status" style="font-size:5vw; margin-top:20px;">Nicht verbunden</div>
+  </div>
 
-  <div id="status" style="font-size:5vw; margin-top:20px;">Nicht verbunden</div>
-
-  <!-- 🔵 ORIGINAL-EINGABEN -->
+  <!-- 🔵 EINGABEN -->
   <label>Buch</label>
   <input list="booklist" id="book">
   <datalist id="booklist">
@@ -118,17 +117,10 @@
 </div>
 
 <script type="module">
-	// 🔵 Pairing-Code aus LocalStorage wiederherstellen
-	window.addEventListener("load", () => {
-	  const saved = localStorage.getItem("lastPairingCode");
-	  if (saved) {
-		document.getElementById("pairingCode").value = saved;
-	  }
-	});
-	
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, set, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+  // 🔥 Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyDPZF_SoHChy3efmhlC4vGcdT62zYzKhsA",
     authDomain: "liedanzeige-3b1dc.firebaseapp.com",
@@ -142,42 +134,53 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
+  // 🔵 feste Display-ID
+  const DISPLAY_ID = "kirche-beamer-1";
+
   let token = null;
 
   function generateToken() {
     return Date.now() + "-" + Math.random().toString(36).substring(2);
   }
 
-  window.pair = function () {
-    const displayId = document.getElementById("displayId").value.trim();
+  // 🔵 Auto-Reconnect beim Laden
+  window.addEventListener("load", () => {
+    const saved = localStorage.getItem("lastPairingCode");
+    if (saved) {
+      document.getElementById("pairingCode").value = saved;
+      pair(true); // auto = true → keine Fehlermeldung
+    }
+    loadSavedList();
+  });
+
+  // 🔵 Pairing
+  window.pair = async function (auto = false) {
     const entered = document.getElementById("pairingCode").value.trim();
+    if (!entered) return;
 
-	// 🔵 Pairing-Code speichern
-	localStorage.setItem("lastPairingCode", entered);
-	
-    const pairingRef = ref(db, `displays/${displayId}/pairingCode`);
+    localStorage.setItem("lastPairingCode", entered);
 
-    import("https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js").then(({ get, child }) => {
-      get(pairingRef).then(snap => {
-        if (!snap.exists() || snap.val() !== entered) {
-          alert("Falscher Pairing-Code");
-          return;
-        }
+    const pairingRef = ref(db, `displays/${DISPLAY_ID}/pairingCode`);
+    const snap = await get(pairingRef);
 
-        token = generateToken();
-        set(ref(db, `displays/${displayId}/token`), token);
+    if (!snap.exists() || snap.val() !== entered) {
+      if (!auto) alert("Falscher Pairing-Code");
+      return;
+    }
 
-        document.getElementById("status").textContent = "Verbunden";
+    token = generateToken();
+    await set(ref(db, `displays/${DISPLAY_ID}/token`), token);
 
-        document.getElementById("btnShow").disabled = false;
-        document.getElementById("btnHide").disabled = false;
-        document.getElementById("btnSave").disabled = false;
-      });
-    });
+    // 🔵 Pairing-Bereich ausblenden
+    document.getElementById("pairingArea").style.display = "none";
+
+    document.getElementById("btnShow").disabled = false;
+    document.getElementById("btnHide").disabled = false;
+    document.getElementById("btnSave").disabled = false;
   };
 
+  // 🔵 Anzeigen
   window.showDisplay = function () {
-    const displayId = document.getElementById("displayId").value.trim();
     const book = document.getElementById("book").value;
     const number = document.getElementById("number").value;
     const verses = document.getElementById("verses").value;
@@ -185,7 +188,7 @@
     const songText = (book + " " + number).trim();
     const versesText = verses.trim() !== "" ? "Str. " + verses : "";
 
-    set(ref(db, `displays/${displayId}/control`), {
+    set(ref(db, `displays/${DISPLAY_ID}/control`), {
       action: "anzeigen",
       song: songText,
       verses: versesText,
@@ -194,16 +197,16 @@
     });
   };
 
+  // 🔵 Ausblenden
   window.hideDisplay = function () {
-    const displayId = document.getElementById("displayId").value.trim();
-
-    set(ref(db, `displays/${displayId}/control`), {
+    set(ref(db, `displays/${DISPLAY_ID}/control`), {
       action: "ausblenden",
       token: token,
       ts: Date.now()
     });
   };
 
+  // 🔵 Favoriten lokal speichern
   window.saveEntry = function () {
     const book = document.getElementById("book").value;
     const number = document.getElementById("number").value;
@@ -256,8 +259,6 @@
       list.appendChild(div);
     });
   };
-
-  loadSavedList();
 </script>
 
 </body>
