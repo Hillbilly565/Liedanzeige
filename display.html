@@ -61,14 +61,18 @@
   const songEl = document.getElementById("song");
   const versesEl = document.getElementById("verses");
 
+  // 🔥 Beim Start IMMER ausgeblendet
+  disp.style.opacity = "0";
+  disp.style.visibility = "hidden";
+
   onValue(ref(db, "anzeige"), (snapshot) => {
     const data = snapshot.val() || {};
 
-    const visible = data.visible || "yes";
+    const visible = data.visible || "no";   // Standard: ausgeblendet
     const song = data.song || "";
     const verses = data.verses || "";
 
-    // 🔥 Ausblenden = Text unsichtbar, Hintergrund bleibt schwarz
+    // 🔥 Sichtbarkeit steuern
     if (visible === "no") {
       disp.style.opacity = "0";
       disp.style.visibility = "hidden";
