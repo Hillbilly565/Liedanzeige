@@ -96,15 +96,19 @@
     if (!expectedToken || data.token !== expectedToken) return;
 
     switch (data.action) {
-      case "showText":
-        contentEl.textContent = data.payload || "";
+
+      case "anzeigen":
+        contentEl.textContent = "Anzeigen…";
         break;
-      case "next":
-        contentEl.textContent = "Nächster Song";
+
+      case "ausblenden":
+        contentEl.textContent = "";
         break;
-      case "prev":
-        contentEl.textContent = "Vorheriger Song";
+
+      case "speichern":
+        contentEl.textContent = "Gespeichert!";
         break;
+
       case "resetPairing":
         generatePairingCode();
         break;
