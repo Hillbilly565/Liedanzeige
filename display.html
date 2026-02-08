@@ -29,22 +29,10 @@
     margin-top: 2vh;
     white-space: nowrap;
   }
-
-  /* Unsichtbarer Vollbild-Button */
-  #fsButton {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-  }
 </style>
 </head>
 
 <body>
-
-<button id="fsButton" onclick="goFullscreen()">FS</button>
 
 <div id="display">
   <div id="song"></div>
@@ -72,15 +60,6 @@
   const disp = document.getElementById("display");
   const songEl = document.getElementById("song");
   const versesEl = document.getElementById("verses");
-  const fsButton = document.getElementById("fsButton");
-
-  // Vollbild-Funktion
-  window.goFullscreen = function () {
-    const el = document.documentElement;
-    if (el.requestFullscreen) el.requestFullscreen();
-    if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    if (el.msRequestFullscreen) el.msRequestFullscreen();
-  };
 
   onValue(ref(db, "anzeige"), (snapshot) => {
     const data = snapshot.val() || {};
@@ -88,12 +67,6 @@
     const visible = data.visible || "yes";
     const song = data.song || "";
     const verses = data.verses || "";
-    const fullscreen = data.fullscreen || "no";
-
-    // 🔥 Vollbild aktivieren durch simulierten Button-Klick
-    if (fullscreen === "yes") {
-      fsButton.click();
-    }
 
     // 🔥 Ausblenden = Text unsichtbar, Hintergrund bleibt schwarz
     if (visible === "no") {

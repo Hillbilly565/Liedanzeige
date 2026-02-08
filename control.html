@@ -52,7 +52,6 @@
 
   .btn-primary { background: #2d6cdf; color: white; }
   .btn-danger  { background: #d9534f; color: white; }
-  .btn-dark    { background: #333; color: white; }
   .btn-save    { background: #5cb85c; color: white; }
 
   .saved-item {
@@ -100,9 +99,6 @@
   <button class="btn btn-primary" onclick="showDisplay()">Anzeigen</button>
   <button class="btn btn-danger" onclick="hideDisplay()">Ausblenden</button>
 
-  <button class="btn btn-dark" onclick="fullscreenOn()">Vollbild an</button>
-  <button class="btn btn-dark" onclick="fullscreenOff()">Vollbild aus</button>
-
   <button class="btn btn-save" onclick="saveEntry()">Speichern</button>
 
   <div id="savedList"></div>
@@ -138,21 +134,12 @@
     set(ref(db, "anzeige"), {
       song: songText,
       verses: versesText,
-      visible: "yes",
-      fullscreen: "no"
+      visible: "yes"
     });
   };
 
   window.hideDisplay = function () {
     update(ref(db, "anzeige"), { visible: "no" });
-  };
-
-  window.fullscreenOn = function () {
-    update(ref(db, "anzeige"), { fullscreen: "yes" });
-  };
-
-  window.fullscreenOff = function () {
-    update(ref(db, "anzeige"), { fullscreen: "no" });
   };
 
   // Favoriten bleiben lokal
