@@ -72,10 +72,34 @@
     border-radius: 10px;
     font-size: 4.5vw;
   }
+  
+	.status-dot {
+	  position: fixed;
+	  top: 10px;
+	  right: 10px;
+	  width: 22px;
+	  height: 22px;
+	  background: #bbb;        /* grau = nicht verbunden */
+	  border-radius: 50%;
+	  border: 3px solid white;
+	  box-shadow: 0 0 6px rgba(0,0,0,0.3);
+	  display: none;           /* erst sichtbar nach Pairing */
+	  transition: background 0.3s ease;
+	}
+
+	.status-connected {
+	  background: #28a745;     /* grün */
+	}
+
+	.status-error {
+	  background: #d9534f;     /* rot */
+	}
 </style>
 </head>
 
 <body>
+
+<div class="status-dot" id="statusDot"></div>
 
 <h2>Liedanzeige – Steuerung</h2>
 
@@ -132,8 +156,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } 
-    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   // 🔥 Firebase
   const firebaseConfig = {
@@ -169,12 +193,19 @@
   };
 
   // 🔵 Auto-Login-Handling
-  onAuthStateChanged(auth, user => {
-    if (user && user.email) {
-      document.getElementById("loginArea").style.display = "none";
-      document.getElementById("pairingArea").style.display = "block";
-    }
-  });
+	onAuthStateChanged(auth, user => {
+	  if (user && user.email) {
+		document.getElementById("loginArea").style.display = "none";
+		document.getElementById("pairingArea").style.display = "block";
+
+		// Automatisches Pairing, falls ein Code gespeichert ist
+		const saved = localStorage.getItem("lastPairingCode");
+		if (saved) {
+		  document.getElementById("pairingCode").value = saved;
+		  pair(); // automatisch versuchen
+		}
+	  }
+	});  
 
   function generateToken() {
     return Date.now() + "-" + Math.random().toString(36).substring(2);
@@ -195,13 +226,22 @@
 
     token = generateToken();
     await set(ref(db, `displays/${DISPLAY_ID}/token`), token);
-
+	
     document.getElementById("btnShow").disabled = false;
     document.getElementById("btnHide").disabled = false;
     document.getElementById("btnSave").disabled = false;
 
     document.getElementById("status").textContent = "Verbunden";
 	document.getElementById("pairingArea").style.display = "none";
+	
+	// Statuspunkt anzeigen und grün färben
+	const dot = document.getElementById("statusDot");
+	dot.style.display = "block";
+	dot.classList.remove("status-error");
+	dot.classList.add("status-connected");
+	
+	// Pairing-Code speichern
+	  localStorage.setItem("lastPairingCode", entered);	
   };
 
   // 🔵 Anzeigen
@@ -284,6 +324,28 @@
       list.appendChild(div);
     });
   };
+  
+	// 🔴 Token-Überwachung
+	onValue(ref(db, `displays/${DISPLAY_ID}/token`), snap => {
+	  const currentToken = snap.val();
+
+	  // Wenn wir noch keinen eigenen Token haben → ignorieren
+	  if (!token) return;
+
+	  // Wenn der Token nicht mehr stimmt → Verbindung verloren
+	  if (currentToken !== token) {
+		const dot = document.getElementById("statusDot");
+		dot.style.display = "block";
+		dot.classList.remove("status-connected");
+		dot.classList.add("status-error");
+
+		document.getElementById("status").textContent = "Verbindung verloren";
+
+		document.getElementById("btnShow").disabled = true;
+		document.getElementById("btnHide").disabled = true;
+		document.getElementById("btnSave").disabled = true;
+	  }
+	});
 
   loadSavedList();
 </script>
