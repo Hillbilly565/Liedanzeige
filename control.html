@@ -81,8 +81,21 @@
 
 <div class="card">
 
-  <!-- 🔵 PAIRING-BEREICH (wird später ausgeblendet) -->
-  <div id="pairingArea">
+  <!-- 🔵 LOGIN-BEREICH -->
+  <div id="loginArea">
+    <label>Email</label>
+    <input id="email">
+
+    <label>Passwort</label>
+    <input id="password" type="password">
+
+    <button class="btn btn-primary" onclick="login()">Login</button>
+
+    <div id="loginStatus" style="font-size:5vw; margin-top:20px; color:#d9534f;"></div>
+  </div>
+
+  <!-- 🔵 PAIRING-BEREICH (erst nach Login sichtbar) -->
+  <div id="pairingArea" style="display:none;">
     <label>Pairing-Code</label>
     <input id="pairingCode">
 
@@ -119,6 +132,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } 
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   // 🔥 Firebase
   const firebaseConfig = {
@@ -133,50 +148,59 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+  const auth = getAuth(app);
 
-  // 🔵 feste Display-ID
   const DISPLAY_ID = "kirche-beamer-1";
-
   let token = null;
+
+  // 🔵 LOGIN
+  window.login = function () {
+    const email = document.getElementById("email").value;
+    const pw = document.getElementById("password").value;
+
+    signInWithEmailAndPassword(auth, email, pw)
+      .then(() => {
+        document.getElementById("loginArea").style.display = "none";
+        document.getElementById("pairingArea").style.display = "block";
+      })
+      .catch(err => {
+        document.getElementById("loginStatus").textContent = "Login fehlgeschlagen: " + err.message;
+      });
+  };
+
+  // 🔵 Auto-Login-Handling
+  onAuthStateChanged(auth, user => {
+    if (user && user.email) {
+      document.getElementById("loginArea").style.display = "none";
+      document.getElementById("pairingArea").style.display = "block";
+    }
+  });
 
   function generateToken() {
     return Date.now() + "-" + Math.random().toString(36).substring(2);
   }
 
-  // 🔵 Auto-Reconnect beim Laden
-  window.addEventListener("load", () => {
-    const saved = localStorage.getItem("lastPairingCode");
-    if (saved) {
-      document.getElementById("pairingCode").value = saved;
-      pair(true); // auto = true → keine Fehlermeldung
-    }
-    loadSavedList();
-  });
-
   // 🔵 Pairing
-  window.pair = async function (auto = false) {
+  window.pair = async function () {
     const entered = document.getElementById("pairingCode").value.trim();
     if (!entered) return;
-
-    localStorage.setItem("lastPairingCode", entered);
 
     const pairingRef = ref(db, `displays/${DISPLAY_ID}/pairingCode`);
     const snap = await get(pairingRef);
 
     if (!snap.exists() || snap.val() !== entered) {
-      if (!auto) alert("Falscher Pairing-Code");
+      alert("Falscher Pairing-Code");
       return;
     }
 
     token = generateToken();
     await set(ref(db, `displays/${DISPLAY_ID}/token`), token);
 
-    // 🔵 Pairing-Bereich ausblenden
-    document.getElementById("pairingArea").style.display = "none";
-
     document.getElementById("btnShow").disabled = false;
     document.getElementById("btnHide").disabled = false;
     document.getElementById("btnSave").disabled = false;
+
+    document.getElementById("status").textContent = "Verbunden";
   };
 
   // 🔵 Anzeigen
@@ -259,6 +283,8 @@
       list.appendChild(div);
     });
   };
+
+  loadSavedList();
 </script>
 
 </body>

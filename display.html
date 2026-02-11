@@ -18,45 +18,43 @@
       text-align: center;
     }
 
-    /* 🔵 Pairing-Code groß in der Mitte */
     #pairingCenter {
       font-size: 90px;
       font-weight: bold;
       line-height: 1.2;
     }
 
-    /* 🔵 Liedanzeige */
     #content {
       display: none;
       padding: 20px;
     }
 
-    /* 🔵 Buch + Nummer groß */
     #songLine {
       font-size: 80px;
       font-weight: bold;
       margin-bottom: 40px;
     }
 
-    /* 🔵 Strophen darunter */
     #versesLine {
       font-size: 60px;
       margin-top: 20px;
     }
   </style>
 
+  <!-- Firebase 8 (du nutzt das bereits) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 </head>
 <body>
 
-<!-- 🔵 Pairing-Code groß in der Mitte -->
+<!-- Pairing-Code -->
 <div id="pairingCenter">
   Code:<br>
   <span id="pairingCode">-----</span>
 </div>
 
-<!-- 🔵 Liedanzeige -->
+<!-- Liedanzeige -->
 <div id="content">
   <div id="songLine"></div>
   <div id="versesLine"></div>
@@ -72,6 +70,7 @@
     messagingSenderId: "615806685064",
     appId: "1:615806685064:web:7c4e2d7403fe4a813d743d"
   };
+
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
@@ -86,6 +85,22 @@
 
   let expectedToken = null;
 
+  // 🔵 ANONYME AUTH – WICHTIG!
+  firebase.auth().signInAnonymously().catch(err => {
+    console.error("Anonymous auth failed:", err);
+  });
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (!user) return;
+    console.log("Anzeige anonym angemeldet, UID:", user.uid);
+
+    // 🔵 Pairing-Code generieren (Anzeige-Seite darf das laut Rules)
+    generatePairingCode();
+
+    // 🔵 Listener aktivieren
+    setupListeners();
+  });
+
   function generatePairingCode() {
     const code = Math.floor(10000 + Math.random() * 90000).toString();
     pairingCodeEl.textContent = code;
@@ -95,48 +110,48 @@
     db.ref(`displays/${DISPLAY_ID}/control`).set(null);
   }
 
-  generatePairingCode();
+  function setupListeners() {
+    db.ref(`displays/${DISPLAY_ID}/token`).on("value", snap => {
+      expectedToken = snap.val();
 
-  db.ref(`displays/${DISPLAY_ID}/token`).on("value", snap => {
-    expectedToken = snap.val();
-
-    if (expectedToken) {
-      pairingCenter.style.display = "none";
-      contentEl.style.display = "block";
-      songLine.textContent = "";
-      versesLine.textContent = "";
-    } else {
-      pairingCenter.style.display = "block";
-      contentEl.style.display = "none";
-    }
-  });
-
-  db.ref(`displays/${DISPLAY_ID}/control`).on("value", snap => {
-    const data = snap.val();
-    if (!data) return;
-    if (!expectedToken || data.token !== expectedToken) return;
-
-    switch (data.action) {
-      case "anzeigen":
-        songLine.textContent = data.song || "";
-        versesLine.textContent = data.verses || "";
-        break;
-
-      case "ausblenden":
+      if (expectedToken) {
+        pairingCenter.style.display = "none";
+        contentEl.style.display = "block";
         songLine.textContent = "";
         versesLine.textContent = "";
-        break;
+      } else {
+        pairingCenter.style.display = "block";
+        contentEl.style.display = "none";
+      }
+    });
 
-      case "speichern":
-        songLine.textContent = "Gespeichert!";
-        versesLine.textContent = "";
-        break;
+    db.ref(`displays/${DISPLAY_ID}/control`).on("value", snap => {
+      const data = snap.val();
+      if (!data) return;
+      if (!expectedToken || data.token !== expectedToken) return;
 
-      case "resetPairing":
-        generatePairingCode();
-        break;
-    }
-  });
+      switch (data.action) {
+        case "anzeigen":
+          songLine.textContent = data.song || "";
+          versesLine.textContent = data.verses || "";
+          break;
+
+        case "ausblenden":
+          songLine.textContent = "";
+          versesLine.textContent = "";
+          break;
+
+        case "speichern":
+          songLine.textContent = "Gespeichert!";
+          versesLine.textContent = "";
+          break;
+
+        case "resetPairing":
+          generatePairingCode();
+          break;
+      }
+    });
+  }
 </script>
 
 </body>
